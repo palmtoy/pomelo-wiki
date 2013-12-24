@@ -10,14 +10,16 @@ RPC服务端每接受一个连接都会抛出一个连接事件, 这个事件中
 
 ###### 使用
 
-使用时只需要向`remoteConfig`的配置中传入一个获取IP白名单的函数(`whitelist: rpcWhitelist.whitelist`)即可, 这个函数需要接受一个回调函数作为其参数, 该回调函数形如`function(err, tmpList) {...}`. 在获取IP白名单的函数内, 拿到IP白名单时(该白名单应为一维`JS Array`), 以类似于`cb(null, self.gWhitelist)`的形式调用IP过滤回调函数.
+使用时只需要向`remoteConfig`的配置中传入一个获取IP白名单的函数(`whitelist: rpcWhitelist.whitelistFunc`)即可, 这个函数需要接受一个回调函数作为其参数, 该回调函数形如`function(err, tmpList) {...}`. 在获取IP白名单的函数内, 拿到IP白名单时(该白名单应为一维`JS Array`), 以类似于`cb(null, self.gWhitelist)`的形式调用IP过滤回调函数.
 
 ```
 ./game-server/app/util/whitelist.js
 ... ...
-module.exports.whitelist = function(cb) {
+var self = this;
+self.gWhitelist = ['192.168.146.100', '192.168.146.101'];
+module.exports.whitelistFunc = function(cb) {
   cb(null, self.gWhitelist);
-};
+  };
 ... ...
 ```
 
@@ -32,7 +34,7 @@ app.configure('production|development', function() {
   app.set('remoteConfig', {
     cacheMsg: true
     , interval: 30
-    , whitelist: rpcWhitelist.whitelist
+    , whitelist: rpcWhitelist.whitelistFunc
   });
 ... ...
 }
@@ -50,12 +52,14 @@ admin服务端每接受一个连接都会抛出一个连接事件, 这个事件�
 
 ###### 使用
 
-使用时只需要向`masterConfig`的配置中传入一个获取IP白名单的函数(`whitelist: rpcWhitelist.whitelist`)即可, 这个函数需要接受一个回调函数作为其参数, 该回调函数形如`function(err, tmpList) {...}`. 在获取IP白名单的函数内, 拿到IP白名单时(该白名单应为一维`JS Array`), 以类似于`cb(null, self.gWhitelist)`的形式调用IP过滤回调函数.
+使用时只需要向`masterConfig`的配置中传入一个获取IP白名单的函数(`whitelist: adminWhitelist.whitelistFunc`)即可, 这个函数需要接受一个回调函数作为其参数, 该回调函数形如`function(err, tmpList) {...}`. 在获取IP白名单的函数内, 拿到IP白名单时(该白名单应为一维`JS Array`), 以类似于`cb(null, self.gWhitelist)`的形式调用IP过滤回调函数.
 
 ```
 ./game-server/app/util/whitelist.js
 ... ...
-module.exports.whitelist = function(cb) {
+var self = this;
+self.gWhitelist = ['192.168.146.100', '192.168.146.101'];
+module.exports.whitelistFunc = function(cb) {
   cb(null, self.gWhitelist);
 };
 ... ...
@@ -63,7 +67,7 @@ module.exports.whitelist = function(cb) {
 
 ```
 ./game-server/app.js
-var rpcWhitelist = require('./app/util/whitelist');
+var adminWhitelist = require('./app/util/whitelist');
 ... ...
 // configure for global
 app.configure('production|development', function() {
@@ -71,7 +75,7 @@ app.configure('production|development', function() {
   app.set('masterConfig', {
     authUser: app.get('adminAuthUser') // auth client function
     , authServer: app.get('adminAuthServerMaster') // auth server function
-    , whitelist: rpcWhitelist.whitelist
+    , whitelist: adminWhitelist.whitelistFunc
   });
 ... ...
 }
