@@ -6,11 +6,14 @@
 
 ##实现方法
 
-需要热更新的模块需要实现为[Pomelo的plugin](https://github.com/NetEase/pomelo/wiki/plugin%E6%96%87%E6%A1%A3)形式.
-
 Pomelo会提供一个专门用于管理可热更新模块及其数据的系统插件(pomelo-hotswapping-plugin), 这个系统插件会向外提供一些接口, 如: 1)以某个模块的名字为索引来存储/读取/修改/清理其所有数据; 2)热更新指定模块. 这样那些将会被热更新的模块与其所要使用的数据就做到了分离, 也就可以安全地来做热更新了. 在做代码热更新期间(清理V8引擎中的模块'cache', 重新'require'模块), 所有请求该模块的调用都将被丢弃, 这也是游戏开发者需要重点考虑的一点, 是否可以承受该模块短暂的拒绝服务. 所以, 可以进行热更新的模块还需要具备一些特征: 这些模块不能是那些玩家无时无刻都离开不了的极关键的模块, 而应该是那些玩家可以短暂离开的功能, 当完成热更新后立刻又能为玩家提供服务的模块.
 
+`pomelo-hotswapping-plugin`除了会实现一般plugin所要求的固有接口外, 还将实现的接口为:
+setData(pluginName, data); // 首次将以`pluginName`为索引的数据`data`保存到`pomelo-hotswapping-plugin`的热更新模块专用数据存储区(仅内存)
+getData(pluginName);  // 获取以`pluginName`为索引的数据, 最主要的用途是: 在模块被热更新之后, 重新取得之前的内存数据
+doHotswapping(pluginName, data); // `pomelo-hotswapping-plugin`会重新`require`这个`pluginName`模块, 数据不会受到任何影响.
 
+会被热更新的模块需要实现为[Pomelo的plugin](https://github.com/NetEase/pomelo/wiki/plugin%E6%96%87%E6%A1%A3)形式, 模块内不要存储任何内存数据, 如需存储则调用`pomelo-hotswapping-plugin`的`setData(pluginName, data)`接口存储到专用内存区域.
 
 
 ##代码热更新的具体做法
